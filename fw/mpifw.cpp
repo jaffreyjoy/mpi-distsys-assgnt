@@ -84,10 +84,14 @@ void print1d(int* vec, int colcount, bool forced=false, std::string colsep=" "){
 int* solve_src(int nvertices, int* src_dest, int src_intr, int* intr_dest){
     for(int dest=0; dest<nvertices; dest++){
         if(intr_dest[dest] != INF){
-            if(src_dest[dest] == INF)
-                src_dest[dest] = src_intr + intr_dest[dest];
-            else
-                src_dest[dest] = std::min(src_intr+intr_dest[dest], src_dest[dest]);
+            if(src_dest[dest] == INF){
+                if(src_intr + intr_dest[dest] > -1)
+                    src_dest[dest] = src_intr + intr_dest[dest];
+            }
+            else{
+                if(src_intr+intr_dest[dest] > -1)
+                    src_dest[dest] = std::min(src_intr+intr_dest[dest], src_dest[dest]);
+            }
         }
     }
     return src_dest;
@@ -102,6 +106,8 @@ void log(std::string msg){
 }
 
 int main(int argc, char** argv){
+    log("start");
+
     int root_rank = 0;
     int my_rank, nproc;
 
@@ -114,9 +120,11 @@ int main(int argc, char** argv){
     int nvertices = 0;
     if(my_rank == root_rank){
         std::cin >> nvertices;
+        log("took vertex count");
     }
     // send nvertices to other processes
     MPI_Bcast(&nvertices, 1, MPI_INT, root_rank, MPI_COMM_WORLD);
+
 
     // take user inp in root proc
     if(my_rank == root_rank)
@@ -131,6 +139,8 @@ int main(int argc, char** argv){
     //     ,{-1, -1,  1,  0,  2}
     //     ,{ 1, -1, -1,  4,  0}
     // };
+
+    log("alloc done");
 
     // get your job queue
     std::vector<int> my_srcs;
